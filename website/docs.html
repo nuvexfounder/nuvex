@@ -61,14 +61,14 @@ tr:nth-child(even){background:rgba(13,21,48,0.5);}
 <div class="main">
   <!-- INTRO -->
   <div id="intro">
-    <div class="badge">v1.0 — nuvex-1 Mainnet</div>
+    <div class="badge">v1.0 — nuvex-1 Mainnet — Active Development</div>
     <h1>Nuvex Documentation</h1>
     <p>Welcome to the official Nuvex developer documentation. Nuvex (NVX) is a next-generation Layer-1 blockchain combining Bitcoin's scarcity model with Ethereum's programmability — faster, greener, and built for global adoption.</p>
     <div class="info-box">
       <strong style="color:var(--accent);">Mainnet is live.</strong><br>
       Chain ID: <span class="inline-code">nuvex-1</span> |
-      API: <span class="inline-code">http://187.124.184.226:1317</span> |
-      P2P: <span class="inline-code">187.124.184.226:26656</span>
+      API: <span class="inline-code">https://nuvex-chain.io:1317</span> |
+      P2P: <span class="inline-code">node.nuvex-chain.io:26656</span>
     </div>
 
     <h2>Key Properties</h2>
@@ -80,10 +80,10 @@ tr:nth-child(even){background:rgba(13,21,48,0.5);}
       <tr><td>Consensus</td><td>dBFT Proof-of-Stake</td></tr>
       <tr><td>Block Time</td><td>~400ms</td></tr>
       <tr><td>Finality</td><td>Sub-second (irreversible)</td></tr>
-      <tr><td>Max TPS</td><td>100,000+</td></tr>
+      <tr><td>Max TPS</td><td>High-performance architecture (benchmarks in progress)</td></tr>
       <tr><td>Energy/TX</td><td>&lt;0.00001 kWh</td></tr>
       <tr><td>Burn Rate</td><td>0.1% of every fee</td></tr>
-      <tr><td>EVM Compatible</td><td>Yes — deploy Solidity directly</td></tr>
+      <tr><td>EVM Compatible</td><td>In development (Roadmap)</td></tr>
     </table>
   </div>
 
@@ -95,17 +95,17 @@ tr:nth-child(even){background:rgba(13,21,48,0.5);}
     <p>Get up and running with Nuvex in minutes.</p>
 
     <h3>1. Check Chain Status</h3>
-    <pre><code>curl http://187.124.184.226:1317/status</code></pre>
+    <pre><code>curl https://nuvex-chain.io:1317/status</code></pre>
 
     <h3>2. Create a Wallet</h3>
     <p>Open the Nuvex Web Wallet:</p>
-    <pre><code>http://187.124.184.226/wallet.html</code></pre>
+    <pre><code>https://nuvex-chain.io/wallet.html</code></pre>
 
     <h3>3. Check Your Balance</h3>
-    <pre><code>curl http://187.124.184.226:1317/balance/YOUR_ADDRESS</code></pre>
+    <pre><code>curl https://nuvex-chain.io:1317/balance/YOUR_ADDRESS</code></pre>
 
     <h3>4. Submit a Transaction</h3>
-    <pre><code>curl -X POST http://187.124.184.226:1317/mempool/submit \
+    <pre><code>curl -X POST https://nuvex-chain.io:1317/mempool/submit \
   -H "Content-Type: application/json" \
   -d '{
     "from": "nuvex1YOUR_ADDRESS",
@@ -134,7 +134,7 @@ go build -o nuvexd cmd/nuvexd/main.go</code></pre>
 
     <h3>Start Your Node</h3>
     <pre><code># Start and connect to mainnet
-./nuvexd start 187.124.184.226:26656</code></pre>
+./nuvexd start node.nuvex-chain.io:26656</code></pre>
 
     <h3>Run as System Service</h3>
     <pre><code>cat > /etc/systemd/system/nuvex.service << EOF
@@ -263,7 +263,7 @@ Address:     SHA256(SHA256(pubkey))[0:19] prefixed with "nuvex1"</code></pre>
   <!-- API -->
   <div id="api">
     <h2>REST API</h2>
-    <p>Base URL: <span class="inline-code">http://187.124.184.226:1317</span></p>
+    <p>Base URL: <span class="inline-code">https://nuvex-chain.io:1317</span></p>
   </div>
 
   <div id="endpoints">
@@ -365,7 +365,7 @@ Address:     SHA256(SHA256(pubkey))[0:19] prefixed with "nuvex1"</code></pre>
     <p>Nuvex has a hard supply cap (500M NVX), a halving schedule every 5 years, sub-second finality, 100,000+ TPS, and fees under $0.001. Ethereum has none of these.</p>
 
     <h3>Can I run a validator?</h3>
-    <p>Yes. Minimum stake: 100 NVX. Connect to mainnet at <span class="inline-code">187.124.184.226:26656</span>.</p>
+    <p>Yes. Minimum stake: 100 NVX. Connect to mainnet at <span class="inline-code">node.nuvex-chain.io:26656</span>.</p>
   </div>
 
   <div style="margin-top:60px;padding-top:40px;border-top:1px solid #1A2340;text-align:center;color:var(--muted);font-size:13px;">

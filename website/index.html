@@ -145,8 +145,8 @@ footer{background:var(--mid);border-top:1px solid #1A2340;padding:48px 40px;text
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-value">100K+</div>
-        <div class="stat-label">Transactions / sec</div>
+        <div class="stat-value">v1.0</div>
+        <div class="stat-label">Mainnet Live</div>
       </div>
       <div class="stat">
         <div class="stat-value">500M</div>
@@ -184,8 +184,8 @@ footer{background:var(--mid);border-top:1px solid #1A2340;padding:48px 40px;text
         <div class="compare-name" style="color:var(--accent);">⬡ Nuvex</div>
         <div class="compare-item"><span class="check">✓</span> 500M Hard Cap</div>
         <div class="compare-item"><span class="check">✓</span> Store of Value</div>
-        <div class="compare-item"><span class="check">✓</span> Full Smart Contracts</div>
-        <div class="compare-item"><span class="check">✓</span> 100,000+ TPS</div>
+        <div class="compare-item"><span class="check">~</span> Smart Contracts (Roadmap)</div>
+        <div class="compare-item"><span class="check">✓</span> High-Performance Architecture</div>
         <div class="compare-item"><span class="check">✓</span> 0.00001 kWh per TX</div>
         <div class="compare-item"><span class="check">✓</span> &lt;1 sec finality</div>
       </div>
@@ -225,7 +225,7 @@ footer{background:var(--mid);border-top:1px solid #1A2340;padding:48px 40px;text
       </div>
       <div class="feature-card">
         <div class="feature-icon">📜</div>
-        <div class="feature-title">EVM Compatible</div>
+        <div class="feature-title">EVM Compatible (Roadmap)</div>
         <div class="feature-desc">Deploy any Ethereum smart contract on Nuvex without changes. Access 500,000+ Solidity developers from day one.</div>
       </div>
       <div class="feature-card">
@@ -389,7 +389,7 @@ footer{background:var(--mid);border-top:1px solid #1A2340;padding:48px 40px;text
 <script>
 async function loadStats() {
   try {
-    const res = await fetch('http://187.124.184.226:1317/status');
+    const res = await fetch('https://nuvex-chain.io:1317/status');
     const data = await res.json();
     document.getElementById('live-height').textContent = data.height.toLocaleString();
     document.getElementById('live-burned').textContent = data.burned.toLocaleString();
