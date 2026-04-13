@@ -41,6 +41,10 @@ func (s *APIServer) Start() {
 	mux.HandleFunc("/p2p", s.handleP2P)
 	mux.HandleFunc("/p2p/connect", s.handleP2PConnect)
 	mux.HandleFunc("/consensus", s.handleConsensus)
+	mux.HandleFunc("/evm/contracts", s.handleEVMContracts)
+	mux.HandleFunc("/evm/deploy", s.handleEVMDeploy)
+	mux.HandleFunc("/evm/call", s.handleEVMCall)
+	mux.HandleFunc("/evm/stats", s.handleEVMStats)
 	
 	fmt.Printf("[Nuvex API] Running on port %s\n", s.port)
 	http.ListenAndServe(":"+s.port, mux)
@@ -278,4 +282,79 @@ func (s *APIServer) handleConsensus(w http.ResponseWriter, r *http.Request) {
 	cors(w)
 	stats := s.app.BFT.Stats()
 	json.NewEncoder(w).Encode(stats)
+}
+
+func (s *APIServer) handleEVMStats(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	stats := s.app.EVM.Stats()
+	json.NewEncoder(w).Encode(stats)
+}
+
+func (s *APIServer) handleEVMContracts(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	contracts := s.app.EVM.GetAllContracts()
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"contracts": contracts,
+		"total":     len(contracts),
+	})
+}
+
+func (s *APIServer) handleEVMDeploy(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		Deployer string `json:"deployer"`
+		Bytecode string `json:"bytecode"`
+		ABI      string `json:"abi"`
+		GasLimit uint64 `json:"gas_limit"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	if req.GasLimit == 0 { req.GasLimit = 3_000_000 }
+	contract, result, err := s.app.EVM.DeployContract(
+		req.Deployer, req.Bytecode, req.ABI,
+		s.app.Blockchain.Height(), req.GasLimit,
+	)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"contract": contract,
+		"result":   result,
+	})
+}
+
+func (s *APIServer) handleEVMCall(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		Caller   string `json:"caller"`
+		Contract string `json:"contract"`
+		Calldata string `json:"calldata"`
+		GasLimit uint64 `json:"gas_limit"`
+		Value    int64  `json:"value"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	if req.GasLimit == 0 { req.GasLimit = 1_000_000 }
+	result, err := s.app.EVM.CallContract(
+		req.Caller, req.Contract, req.Calldata,
+		s.app.Blockchain.Height(), req.GasLimit, req.Value,
+	)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(result)
 }

@@ -19,6 +19,7 @@ type NuvexApp struct {
 	BFT        *keeper.BFTConsensus
 	Engine     *keeper.ConsensusEngine
 	Height     int64
+	EVM        *keeper.EVMKeeper
 }
 
 func NewNuvexApp() *NuvexApp {
@@ -66,6 +67,8 @@ func NewNuvexApp() *NuvexApp {
 	fmt.Printf("[Nuvex] ✅ Founders:      %d NVX\n\n",
 		state.GetBalance("nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9")/1_000_000)
 
+	evm, _ := keeper.NewEVMKeeper()
+
 	return &NuvexApp{
 		ChainID:    types.ChainID,
 		Version:    "1.0.0",
@@ -77,6 +80,7 @@ func NewNuvexApp() *NuvexApp {
 		BFT:        bft,
 		Engine:     engine,
 		Height:     bc.Height(),
+		EVM:        evm,
 	}
 }
 
