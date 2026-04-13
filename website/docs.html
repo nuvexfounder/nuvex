@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvex Docs — Developer Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--accent:#00D4FF;--purple:#7B2FBE;--dark:#0A0F1E;--mid:#0D1530;--text:#E8EDF5;--muted:#6B7A99;--code:#060B18;}
+body{background:var(--dark);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;}
+/* SIDEBAR */
+.sidebar{width:260px;min-height:100vh;background:var(--mid);border-right:1px solid #1A2340;padding:24px 0;position:fixed;top:0;left:0;overflow-y:auto;}
+.sidebar-logo{font-size:18px;font-weight:700;color:var(--accent);padding:0 24px 24px;border-bottom:1px solid #1A2340;letter-spacing:2px;}
+.sidebar-logo span{color:var(--purple);}
+.sidebar-section{padding:16px 24px 8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.sidebar-link{display:block;padding:8px 24px;color:var(--muted);text-decoration:none;font-size:14px;transition:all 0.2s;}
+.sidebar-link:hover,.sidebar-link.active{color:var(--accent);background:rgba(0,212,255,0.05);border-left:2px solid var(--accent);}
+/* MAIN */
+.main{margin-left:260px;padding:48px;max-width:860px;}
+h1{font-size:36px;font-weight:700;margin-bottom:12px;}
+h2{font-size:24px;font-weight:700;margin:40px 0 12px;color:var(--accent);}
+h3{font-size:18px;font-weight:600;margin:24px 0 8px;color:var(--text);}
+p{color:var(--muted);line-height:1.7;margin-bottom:16px;font-size:15px;}
+.badge{display:inline-block;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--accent);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:24px;}
+pre{background:var(--code);border:1px solid #1A2340;border-radius:8px;padding:20px;margin:16px 0;overflow-x:auto;}
+code{font-family:'Courier New',monospace;font-size:14px;color:#00ff88;}
+.inline-code{background:var(--code);border:1px solid #1A2340;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:13px;color:var(--accent);}
+.info-box{background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:8px;padding:16px;margin:16px 0;}
+.warn-box{background:rgba(255,107,107,0.05);border:1px solid rgba(255,107,107,0.2);border-radius:8px;padding:16px;margin:16px 0;color:#ff6b6b;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:var(--mid);padding:12px;text-align:left;font-size:13px;color:var(--accent);border:1px solid #1A2340;}
+td{padding:12px;font-size:13px;color:var(--muted);border:1px solid #1A2340;}
+tr:nth-child(even){background:rgba(13,21,48,0.5);}
+.endpoint{background:var(--code);border:1px solid #1A2340;border-radius:8px;padding:16px;margin:12px 0;}
+.method{display:inline-block;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700;margin-right:8px;}
+.get{background:rgba(0,255,136,0.15);color:#00ff88;}
+.post{background:rgba(0,212,255,0.15);color:var(--accent);}
+.divider{border:none;border-top:1px solid #1A2340;margin:40px 0;}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">NUV<span>EX</span> DOCS</div>
+  <div class="sidebar-section">Getting Started</div>
+  <a class="sidebar-link active" href="#intro">Introduction</a>
+  <a class="sidebar-link" href="#quickstart">Quick Start</a>
+  <a class="sidebar-link" href="#node">Run a Node</a>
+  <div class="sidebar-section">Core Concepts</div>
+  <a class="sidebar-link" href="#consensus">Consensus (dBFT-PoS)</a>
+  <a class="sidebar-link" href="#tokenomics">Tokenomics</a>
+  <a class="sidebar-link" href="#halving">Halving Schedule</a>
+  <a class="sidebar-link" href="#wallet">Wallet & Keys</a>
+  <div class="sidebar-section">API Reference</div>
+  <a class="sidebar-link" href="#api">REST API</a>
+  <a class="sidebar-link" href="#endpoints">Endpoints</a>
+  <div class="sidebar-section">Resources</div>
+  <a class="sidebar-link" href="#explorer">Block Explorer</a>
+  <a class="sidebar-link" href="#faq">FAQ</a>
+</div>
+
+<div class="main">
+  <!-- INTRO -->
+  <div id="intro">
+    <div class="badge">v1.0 — nuvex-1 Mainnet</div>
+    <h1>Nuvex Documentation</h1>
+    <p>Welcome to the official Nuvex developer documentation. Nuvex (NVX) is a next-generation Layer-1 blockchain combining Bitcoin's scarcity model with Ethereum's programmability — faster, greener, and built for global adoption.</p>
+    <div class="info-box">
+      <strong style="color:var(--accent);">Mainnet is live.</strong><br>
+      Chain ID: <span class="inline-code">nuvex-1</span> |
+      API: <span class="inline-code">http://187.124.184.226:1317</span> |
+      P2P: <span class="inline-code">187.124.184.226:26656</span>
+    </div>
+
+    <h2>Key Properties</h2>
+    <table>
+      <tr><th>Property</th><th>Value</th></tr>
+      <tr><td>Chain ID</td><td>nuvex-1</td></tr>
+      <tr><td>Native Token</td><td>NVX (micro: unvx)</td></tr>
+      <tr><td>Max Supply</td><td>500,000,000 NVX</td></tr>
+      <tr><td>Consensus</td><td>dBFT Proof-of-Stake</td></tr>
+      <tr><td>Block Time</td><td>~400ms</td></tr>
+      <tr><td>Finality</td><td>Sub-second (irreversible)</td></tr>
+      <tr><td>Max TPS</td><td>100,000+</td></tr>
+      <tr><td>Energy/TX</td><td>&lt;0.00001 kWh</td></tr>
+      <tr><td>Burn Rate</td><td>0.1% of every fee</td></tr>
+      <tr><td>EVM Compatible</td><td>Yes — deploy Solidity directly</td></tr>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- QUICKSTART -->
+  <div id="quickstart">
+    <h2>Quick Start</h2>
+    <p>Get up and running with Nuvex in minutes.</p>
+
+    <h3>1. Check Chain Status</h3>
+    <pre><code>curl http://187.124.184.226:1317/status</code></pre>
+
+    <h3>2. Create a Wallet</h3>
+    <p>Open the Nuvex Web Wallet:</p>
+    <pre><code>http://187.124.184.226/wallet.html</code></pre>
+
+    <h3>3. Check Your Balance</h3>
+    <pre><code>curl http://187.124.184.226:1317/balance/YOUR_ADDRESS</code></pre>
+
+    <h3>4. Submit a Transaction</h3>
+    <pre><code>curl -X POST http://187.124.184.226:1317/mempool/submit \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "nuvex1YOUR_ADDRESS",
+    "to": "nuvex1RECIPIENT",
+    "amount": 1000000,
+    "fee": 1000,
+    "nonce": 1
+  }'</code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- NODE -->
+  <div id="node">
+    <h2>Run a Node</h2>
+    <p>Anyone can run a Nuvex node. Requirements: Ubuntu 20.04+, 2GB RAM, 50GB disk, Go 1.21+.</p>
+
+    <h3>Install Go</h3>
+    <pre><code>apt install golang-go -y
+go version  # should show go1.22+</code></pre>
+
+    <h3>Clone & Build</h3>
+    <pre><code>git clone https://github.com/nuvex-foundation/nuvex
+cd nuvex
+go build -o nuvexd cmd/nuvexd/main.go</code></pre>
+
+    <h3>Start Your Node</h3>
+    <pre><code># Start and connect to mainnet
+./nuvexd start 187.124.184.226:26656</code></pre>
+
+    <h3>Run as System Service</h3>
+    <pre><code>cat > /etc/systemd/system/nuvex.service << EOF
+[Unit]
+Description=Nuvex Blockchain Node
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/nuvexd start
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable nuvex
+systemctl start nuvex</code></pre>
+
+    <h3>Check Node Status</h3>
+    <pre><code>systemctl status nuvex
+curl http://localhost:1317/status</code></pre>
+
+    <div class="info-box">
+      <strong style="color:var(--accent);">Green Validator Bonus</strong><br>
+      Validators running on certified renewable energy receive a +0.5% APY bonus. Join the green network.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CONSENSUS -->
+  <div id="consensus">
+    <h2>Consensus: dBFT-PoS</h2>
+    <p>Nuvex uses Delegated Byzantine Fault Tolerant Proof-of-Stake — the most efficient consensus mechanism available.</p>
+
+    <h3>How It Works</h3>
+    <table>
+      <tr><th>Step</th><th>Action</th></tr>
+      <tr><td>1</td><td>NVX holders stake tokens to become Delegators</td></tr>
+      <tr><td>2</td><td>Delegators vote for up to 512 Validators</td></tr>
+      <tr><td>3</td><td>VRF selects Leader (stake-weighted, random)</td></tr>
+      <tr><td>4</td><td>Leader proposes new block</td></tr>
+      <tr><td>5</td><td>Validators vote: PREPARE → COMMIT</td></tr>
+      <tr><td>6</td><td>2/3+1 signatures = IRREVERSIBLE finality</td></tr>
+    </table>
+
+    <h3>Slashing Rules</h3>
+    <table>
+      <tr><th>Offense</th><th>Penalty</th></tr>
+      <tr><td>Double signing</td><td>5% slash + permanent jail</td></tr>
+      <tr><td>Excessive downtime</td><td>0.01% slash</td></tr>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- TOKENOMICS -->
+  <div id="tokenomics">
+    <h2>Tokenomics</h2>
+
+    <h3>Units</h3>
+    <table>
+      <tr><th>Unit</th><th>Value</th><th>Use</th></tr>
+      <tr><td>NVX</td><td>1 NVX</td><td>Display, trading</td></tr>
+      <tr><td>unvx</td><td>0.000001 NVX</td><td>On-chain amounts</td></tr>
+    </table>
+    <p>Example: <span class="inline-code">1,000,000 unvx = 1 NVX</span></p>
+
+    <h3>Distribution</h3>
+    <table>
+      <tr><th>Category</th><th>%</th><th>Amount</th><th>Vesting</th></tr>
+      <tr><td>Community Fair Launch</td><td>55%</td><td>275,000,000 NVX</td><td>Immediate</td></tr>
+      <tr><td>Ecosystem Fund</td><td>20%</td><td>100,000,000 NVX</td><td>Governance</td></tr>
+      <tr><td>Staking Rewards</td><td>20%</td><td>100,000,000 NVX</td><td>10yr linear</td></tr>
+      <tr><td>Founders</td><td>5%</td><td>25,000,000 NVX</td><td>4yr vesting</td></tr>
+    </table>
+
+    <h3>Deflationary Mechanism</h3>
+    <p>Every transaction on Nuvex burns 0.1% of the fee permanently:</p>
+    <pre><code>burn_amount = fee * 10 / 10_000  // 0.1% of fee
+validator_reward = fee - burn_amount</code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- HALVING -->
+  <div id="halving">
+    <h2>Halving Schedule</h2>
+    <p>Every 5 years (~78,840,000 blocks), the block reward halves. Initial reward: 50 NVX/block.</p>
+    <table>
+      <tr><th>Epoch</th><th>Year</th><th>Block</th><th>Reward</th></tr>
+      <tr><td>0</td><td>2025</td><td>0</td><td>50.0000 NVX</td></tr>
+      <tr><td>1</td><td>2030</td><td>78,840,000</td><td>25.0000 NVX</td></tr>
+      <tr><td>2</td><td>2035</td><td>157,680,000</td><td>12.5000 NVX</td></tr>
+      <tr><td>3</td><td>2040</td><td>236,520,000</td><td>6.2500 NVX</td></tr>
+      <tr><td>4</td><td>2045</td><td>315,360,000</td><td>3.1250 NVX</td></tr>
+      <tr><td>5</td><td>2050</td><td>394,200,000</td><td>1.5625 NVX</td></tr>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- WALLET -->
+  <div id="wallet">
+    <h2>Wallet & Keys</h2>
+
+    <h3>Address Format</h3>
+    <pre><code>nuvex1[38 hex characters]
+Example: nuvex1af7c2f39fd1751be635ff6141a4c4aea8cda91</code></pre>
+
+    <h3>Key Generation</h3>
+    <p>Nuvex uses SECP256k1 — the same elliptic curve as Bitcoin.</p>
+    <pre><code>Private Key: 32 random bytes (64 hex chars)
+Public Key:  64 bytes (128 hex chars)
+Address:     SHA256(SHA256(pubkey))[0:19] prefixed with "nuvex1"</code></pre>
+
+    <div class="warn-box">
+      Never share your private key. Anyone with your private key has full control of your NVX.
+      Write it on paper. Never store digitally.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- API -->
+  <div id="api">
+    <h2>REST API</h2>
+    <p>Base URL: <span class="inline-code">http://187.124.184.226:1317</span></p>
+  </div>
+
+  <div id="endpoints">
+    <h2>API Endpoints</h2>
+
+    <h3>Chain Status</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/status</code>
+    </div>
+    <pre><code>{
+  "chain_id": "nuvex-1",
+  "height": 35000,
+  "status": "running",
+  "circulating": 500000000000000,
+  "burned": 0,
+  "mempool_size": 0,
+  "version": "1.0.0"
+}</code></pre>
+
+    <h3>Latest Block</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/block/latest</code>
+    </div>
+
+    <h3>Block by Height</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/block/{height}</code>
+    </div>
+
+    <h3>Recent Blocks</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/blocks</code>
+    </div>
+
+    <h3>Account Balance</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/balance/{address}</code>
+    </div>
+    <pre><code>{
+  "address": "nuvex1...",
+  "balance_unvx": 25000000000000,
+  "balance_nvx": 25000000
+}</code></pre>
+
+    <h3>Submit Transaction (Mempool)</h3>
+    <div class="endpoint">
+      <span class="method post">POST</span><code>/mempool/submit</code>
+    </div>
+    <pre><code>{
+  "from": "nuvex1...",
+  "to": "nuvex1...",
+  "amount": 1000000000,
+  "fee": 1000,
+  "nonce": 1
+}</code></pre>
+
+    <h3>Mempool Status</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/mempool</code>
+    </div>
+
+    <h3>Validators</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/validators</code>
+    </div>
+
+    <h3>Consensus Status</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/consensus</code>
+    </div>
+
+    <h3>Mining Stats</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/mining</code>
+    </div>
+
+    <h3>P2P Network</h3>
+    <div class="endpoint">
+      <span class="method get">GET</span><code>/p2p</code>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FAQ -->
+  <div id="faq">
+    <h2>FAQ</h2>
+
+    <h3>Who created Nuvex?</h3>
+    <p>Nuvex was created anonymously by the Nuvex Foundation — like Satoshi Nakamoto created Bitcoin. The idea stands on its own. No founder reputation. No central authority.</p>
+
+    <h3>How do I get NVX?</h3>
+    <p>Nuvex is a Fair Launch — no ICO, no presale. NVX will be available on decentralized exchanges. Run a validator node to earn staking rewards.</p>
+
+    <h3>Is Nuvex open source?</h3>
+    <p>Yes. The complete source code is available on GitHub. Anyone can verify, fork, or contribute.</p>
+
+    <h3>How is Nuvex different from Ethereum?</h3>
+    <p>Nuvex has a hard supply cap (500M NVX), a halving schedule every 5 years, sub-second finality, 100,000+ TPS, and fees under $0.001. Ethereum has none of these.</p>
+
+    <h3>Can I run a validator?</h3>
+    <p>Yes. Minimum stake: 100 NVX. Connect to mainnet at <span class="inline-code">187.124.184.226:26656</span>.</p>
+  </div>
+
+  <div style="margin-top:60px;padding-top:40px;border-top:1px solid #1A2340;text-align:center;color:var(--muted);font-size:13px;">
+    Nuvex Foundation — Anonymous — nuvex-1 Mainnet — v1.0.0
+  </div>
+</div>
+</body>
+</html>

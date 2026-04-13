@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvex Wallet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0A0F1E; color:#E8EDF5; font-family:'Segoe UI',sans-serif; min-height:100vh; }
+
+/* Header */
+.header { background:#0D1530; border-bottom:2px solid #00D4FF; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+.logo { font-size:20px; font-weight:700; color:#00D4FF; letter-spacing:2px; }
+.logo span { color:#7B2FBE; }
+.network { font-size:11px; color:#6B7A99; display:flex; align-items:center; gap:6px; }
+.dot { width:7px; height:7px; border-radius:50%; background:#00ff88; animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Layout */
+.container { max-width:480px; margin:0 auto; padding:24px 16px; }
+
+/* Cards */
+.card { background:#0D1530; border:1px solid #1A2340; border-radius:16px; padding:24px; margin-bottom:16px; }
+.card-title { font-size:12px; color:#6B7A99; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
+
+/* Screens */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* Welcome */
+.welcome-logo { text-align:center; padding:40px 0 24px; }
+.welcome-logo .big { font-size:48px; font-weight:700; color:#00D4FF; }
+.welcome-logo .sub { font-size:14px; color:#6B7A99; margin-top:8px; }
+.btn { width:100%; padding:16px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; margin-bottom:12px; transition:all 0.2s; }
+.btn-primary { background:linear-gradient(135deg,#00D4FF,#7B2FBE); color:white; }
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+.btn-secondary { background:#1A2340; color:#E8EDF5; border:1px solid #2A3450; }
+.btn-secondary:hover { border-color:#00D4FF; }
+.btn-danger { background:#2A1020; color:#ff6b6b; border:1px solid #ff6b6b44; }
+.btn-small { padding:10px 16px; width:auto; font-size:13px; border-radius:8px; }
+
+/* Balance */
+.balance-card { background:linear-gradient(135deg,#0D1530,#1A0A2E); border:1px solid #7B2FBE44; text-align:center; padding:32px 24px; }
+.balance-label { font-size:12px; color:#6B7A99; text-transform:uppercase; letter-spacing:1px; }
+.balance-amount { font-size:42px; font-weight:700; color:#00D4FF; margin:8px 0 4px; }
+.balance-usd { font-size:14px; color:#6B7A99; }
+.address-display { background:#060B18; border:1px solid #1A2340; border-radius:8px; padding:12px; margin-top:16px; font-size:11px; color:#6B7A99; word-break:break-all; cursor:pointer; }
+.address-display:hover { border-color:#00D4FF; color:#00D4FF; }
+
+/* Actions */
+.actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.action-btn { background:#0D1530; border:1px solid #1A2340; border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.action-btn:hover { border-color:#00D4FF; transform:translateY(-2px); }
+.action-icon { font-size:24px; margin-bottom:8px; }
+.action-label { font-size:13px; color:#E8EDF5; font-weight:600; }
+
+/* Form */
+.input-group { margin-bottom:16px; }
+.input-label { font-size:12px; color:#6B7A99; margin-bottom:8px; display:block; }
+.input { width:100%; background:#060B18; border:1px solid #1A2340; border-radius:8px; padding:14px; color:#E8EDF5; font-size:14px; outline:none; }
+.input:focus { border-color:#00D4FF; }
+.input-hint { font-size:11px; color:#6B7A99; margin-top:6px; }
+
+/* TX List */
+.tx-item { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #1A2340; }
+.tx-item:last-child { border-bottom:none; }
+.tx-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; margin-right:12px; flex-shrink:0; }
+.tx-icon.sent { background:#2A1020; }
+.tx-icon.received { background:#0A2A1A; }
+.tx-info { flex:1; }
+.tx-type { font-size:13px; font-weight:600; }
+.tx-hash { font-size:11px; color:#6B7A99; margin-top:2px; }
+.tx-amount { text-align:right; }
+.tx-amount.sent { color:#ff6b6b; }
+.tx-amount.received { color:#00ff88; }
+.tx-time { font-size:11px; color:#6B7A99; }
+
+/* Seed phrase */
+.seed-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0; }
+.seed-word { background:#060B18; border:1px solid #1A2340; border-radius:8px; padding:10px; text-align:center; font-size:13px; }
+.seed-num { font-size:10px; color:#6B7A99; display:block; }
+.seed-text { color:#00D4FF; font-weight:600; }
+.warning-box { background:#2A1A0A; border:1px solid #FF8C0044; border-radius:8px; padding:14px; margin:12px 0; font-size:12px; color:#FFA040; }
+
+/* QR */
+#qr-code { display:flex; justify-content:center; margin:16px 0; }
+#qr-code canvas { border-radius:8px; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#00D4FF; color:#0A0F1E; padding:12px 24px; border-radius:8px; font-size:13px; font-weight:600; opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:999; }
+.toast.show { opacity:1; }
+
+/* Status bar */
+.status-bar { background:#060B18; border:1px solid #1A2340; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; font-size:11px; color:#6B7A99; margin-bottom:16px; }
+
+/* Nav */
+.nav { position:fixed; bottom:0; left:0; right:0; background:#0D1530; border-top:1px solid #1A2340; display:flex; }
+.nav-item { flex:1; padding:12px; text-align:center; cursor:pointer; font-size:11px; color:#6B7A99; transition:color 0.2s; }
+.nav-item.active { color:#00D4FF; }
+.nav-icon { font-size:20px; display:block; margin-bottom:2px; }
+.wallet-page { padding-bottom:70px; }
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- SCREEN: Welcome -->
+<div class="screen active" id="screen-welcome">
+  <div class="container">
+    <div class="welcome-logo">
+      <div class="big">NVX</div>
+      <div style="font-size:22px;font-weight:700;color:#E8EDF5;margin-top:8px;">NUVEX WALLET</div>
+      <div class="sub">Deine Schluessel. Deine Coins. Deine Kontrolle.</div>
+    </div>
+    <div class="card">
+      <button class="btn btn-primary" onclick="showScreen('screen-create')">🆕 Neue Wallet erstellen</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-import')">📥 Wallet importieren</button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:#6B7A99;margin-top:16px;">
+      Nuvex Wallet v1.0 — Open Source — Anonym
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: Create Wallet -->
+<div class="screen" id="screen-create">
+  <div class="header">
+    <div class="logo">NUV<span>EX</span></div>
+    <button class="btn btn-secondary btn-small" onclick="showScreen('screen-welcome')">← Zurück</button>
+  </div>
+  <div class="container">
+    <div class="card">
+      <div class="card-title">Neue Wallet erstellen</div>
+      <div class="warning-box">
+        ⚠️ Schreibe deine Seed Phrase auf Papier. Wer sie hat, hat Zugriff auf deine NVX. Niemals digital speichern.
+      </div>
+      <div id="seed-display" class="seed-grid"></div>
+      <div class="input-group" style="margin-top:16px;">
+        <label class="input-label">Wallet Passwort (zum Verschluesseln)</label>
+        <input class="input" type="password" id="create-password" placeholder="Sicheres Passwort eingeben">
+      </div>
+      <button class="btn btn-primary" onclick="createWallet()">✅ Wallet erstellen</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: Import Wallet -->
+<div class="screen" id="screen-import">
+  <div class="header">
+    <div class="logo">NUV<span>EX</span></div>
+    <button class="btn btn-secondary btn-small" onclick="showScreen('screen-welcome')">← Zurück</button>
+  </div>
+  <div class="container">
+    <div class="card">
+      <div class="card-title">Wallet importieren</div>
+      <div class="input-group">
+        <label class="input-label">Private Key (Hex)</label>
+        <input class="input" type="password" id="import-key" placeholder="64-stelliger Hex Private Key">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Passwort</label>
+        <input class="input" type="password" id="import-password" placeholder="Passwort setzen">
+      </div>
+      <button class="btn btn-primary" onclick="importWallet()">📥 Importieren</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: Main Wallet -->
+<div class="screen wallet-page" id="screen-wallet">
+  <div class="header">
+    <div class="logo">NUV<span>EX</span></div>
+    <div class="network"><div class="dot"></div>nuvex-1</div>
+  </div>
+
+  <!-- Tab: Home -->
+  <div id="tab-home" class="container">
+    <div class="status-bar">
+      <span id="status-height">Block: ...</span>
+      <span id="status-peers">Peers: 0</span>
+      <span style="color:#00ff88">● Online</span>
+    </div>
+    <div class="card balance-card">
+      <div class="balance-label">Gesamtguthaben</div>
+      <div class="balance-amount" id="balance-display">0.00</div>
+      <div class="balance-usd">NVX</div>
+      <div class="address-display" id="address-display" onclick="copyAddress()">
+        Lade Adresse...
+      </div>
+    </div>
+    <div class="actions">
+      <div class="action-btn" onclick="showTab('tab-send')">
+        <div class="action-icon">📤</div>
+        <div class="action-label">Senden</div>
+      </div>
+      <div class="action-btn" onclick="showTab('tab-receive')">
+        <div class="action-icon">📥</div>
+        <div class="action-label">Empfangen</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Letzte Transaktionen</div>
+      <div id="tx-list"><div style="color:#6B7A99;font-size:13px;text-align:center;padding:20px;">Keine Transaktionen</div></div>
+    </div>
+  </div>
+
+  <!-- Tab: Send -->
+  <div id="tab-send" class="container" style="display:none;">
+    <div class="card">
+      <div class="card-title">NVX senden</div>
+      <div class="input-group">
+        <label class="input-label">Empfänger Adresse</label>
+        <input class="input" id="send-to" placeholder="nuvex1...">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Betrag (NVX)</label>
+        <input class="input" id="send-amount" type="number" placeholder="0.00" step="0.000001">
+        <div class="input-hint">Verfügbar: <span id="available-balance">0</span> NVX</div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Fee (unvx) — höher = schneller</label>
+        <input class="input" id="send-fee" type="number" value="1000">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Passwort bestätigen</label>
+        <input class="input" type="password" id="send-password" placeholder="Wallet Passwort">
+      </div>
+      <button class="btn btn-primary" onclick="sendTx()">📤 Senden</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="showTab('tab-home')">Abbrechen</button>
+    </div>
+  </div>
+
+  <!-- Tab: Receive -->
+  <div id="tab-receive" class="container" style="display:none;">
+    <div class="card">
+      <div class="card-title">NVX empfangen</div>
+      <div id="qr-code"></div>
+      <div style="text-align:center;margin:12px 0;">
+        <div style="font-size:12px;color:#6B7A99;margin-bottom:8px;">Deine Adresse</div>
+        <div class="address-display" id="receive-address" onclick="copyAddress()" style="text-align:center;font-size:12px;"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="copyAddress()">📋 Adresse kopieren</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="showTab('tab-home')">← Zurück</button>
+    </div>
+  </div>
+
+  <!-- Tab: Settings -->
+  <div id="tab-settings" class="container" style="display:none;">
+    <div class="card">
+      <div class="card-title">Einstellungen</div>
+      <div class="input-group">
+        <label class="input-label">Node URL</label>
+        <input class="input" id="node-url" value="http://187.124.184.226:1317">
+      </div>
+      <button class="btn btn-secondary" onclick="saveSettings()">💾 Speichern</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Wallet Info</div>
+      <div style="font-size:12px;color:#6B7A99;line-height:1.8;">
+        <div>Version: Nuvex Wallet v1.0</div>
+        <div>Chain: nuvex-1</div>
+        <div>Network: Mainnet</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Gefährliche Zone</div>
+      <button class="btn btn-danger" onclick="exportKey()">🔑 Private Key exportieren</button>
+      <button class="btn btn-danger" style="margin-top:8px;" onclick="logout()">🚪 Wallet löschen</button>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <div class="nav-item active" onclick="showTab('tab-home');setNavActive(this)">
+      <span class="nav-icon">🏠</span>Home
+    </div>
+    <div class="nav-item" onclick="showTab('tab-send');setNavActive(this)">
+      <span class="nav-icon">📤</span>Senden
+    </div>
+    <div class="nav-item" onclick="showTab('tab-receive');setNavActive(this)">
+      <span class="nav-icon">📥</span>Empfangen
+    </div>
+    <div class="nav-item" onclick="showTab('tab-settings');setNavActive(this)">
+      <span class="nav-icon">⚙️</span>Settings
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────
+let wallet = null;
+let nodeUrl = localStorage.getItem('nodeUrl') || 'http://187.124.184.226:1317';
+let refreshInterval = null;
+
+// ── Screen Management ─────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-create') generateSeedPhrase();
+}
+
+function showTab(id) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  if (id === 'tab-receive') generateQR();
+}
+
+function setNavActive(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Crypto ────────────────────────────────────
+function generatePrivateKey() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function hexToBytes(hex) {
+  const bytes = [];
+  for (let i = 0; i < hex.length; i += 2)
+    bytes.push(parseInt(hex.substr(i, 2), 16));
+  return new Uint8Array(bytes);
+}
+
+// SHA256 ohne crypto.subtle (funktioniert auch ueber HTTP)
+function sha256(data) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  let result = '';
+  const words = [];
+  const asciiBitLength = data.length * 8;
+  let hash = [];
+  let k = [];
+  let primeCounter = 0;
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (let i = candidate * candidate; i < 313; i += candidate) {
+        isComposite[i] = true;
+      }
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+    }
+  }
+  data += '\x80';
+  while (data.length % 64 - 56) data += '\x00';
+  for (let i = 0; i < data.length; i++) {
+    let j = data.charCodeAt(i);
+    if (j >> 8) return '';
+    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+  }
+  words[words.length] = ((asciiBitLength / maxWord) | 0);
+  words[words.length] = (asciiBitLength | 0);
+  for (let j = 0; j < words.length;) {
+    let w = words.slice(j, j += 16);
+    let oldHash = hash.slice(0);
+    for (let i = 0; i < 64; i++) {
+      let i2 = i < 16 ? w[i] : (
+        rightRotate(w[i-2], 17) ^ rightRotate(w[i-2], 19) ^ (w[i-2] >>> 10)) +
+        w[i-7] + (rightRotate(w[i-15], 7) ^ rightRotate(w[i-15], 18) ^ (w[i-15] >>> 3)) +
+        w[i-16];
+      w[i] = i2 = (i2 | 0);
+      let a=hash[0], e=hash[4];
+      let temp1 = hash[7] + (rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25)) +
+        ((e&hash[5])^((~e)&hash[6])) + k[i] + i2;
+      let temp2 = (rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22)) +
+        ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash = [(temp1+temp2)|0, a, hash[1], hash[2], (hash[3]+temp1)|0, e, hash[4], hash[5]];
+    }
+    for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (let i = 0; i < 8; i++) {
+    for (let j = 3; j + 1; j--) {
+      let b = (hash[i] >> (j * 8)) & 255;
+      result += ((b < 16) ? 0 : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+function bytesToString(bytes) {
+  return Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+}
+
+function privateKeyToAddress(privHex) {
+  const privBytes = hexToBytes(privHex);
+  const str1 = bytesToString(privBytes);
+  const hash1 = sha256(str1);
+  const hash1Bytes = hexToBytes(hash1);
+  const str2 = bytesToString(hash1Bytes);
+  const hash2 = sha256(str2);
+  return 'nuvex1' + hash2.slice(0, 38);
+}
+
+// Seed Phrase generieren (vereinfacht)
+const WORDLIST = ['apple','bridge','cloud','dragon','eagle','forest','garden','harbor',
+  'island','jungle','knight','lemon','mirror','night','ocean','planet','queen','river',
+  'silver','tower','umbrella','valley','winter','xenon','yellow','zebra','alpha','beta',
+  'gamma','delta','echo','foxtrot','golf','hotel','india','juliet','kilo','lima','mike',
+  'november','oscar','papa','quebec','romeo','sierra','tango','uniform','victor','whiskey'];
+
+function generateSeedPhrase() {
+  const words = [];
+  const arr = new Uint8Array(12);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < 12; i++) {
+    words.push(WORDLIST[arr[i] % WORDLIST.length]);
+  }
+  const grid = document.getElementById('seed-display');
+  grid.innerHTML = words.map((w,i) =>
+    `<div class="seed-word"><span class="seed-num">${i+1}</span><span class="seed-text">${w}</span></div>`
+  ).join('');
+  return words.join(' ');
+}
+
+// ── Wallet erstellen ──────────────────────────
+async function createWallet() {
+  try {
+    const password = document.getElementById('create-password').value;
+    if (!password || password.length < 6) {
+      toast('Passwort mindestens 6 Zeichen!'); return;
+    }
+    const privKey = generatePrivateKey();
+    const address = privateKeyToAddress(privKey);
+    wallet = { privKey, address, password };
+    localStorage.setItem('nuvex_wallet', JSON.stringify({
+      address,
+      privKey: btoa(privKey)
+    }));
+    await initWallet();
+  } catch(e) {
+    toast('Fehler: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ── Wallet importieren ────────────────────────
+async function importWallet() {
+  const privKey = document.getElementById('import-key').value.trim();
+  const password = document.getElementById('import-password').value;
+  if (privKey.length !== 64) { toast('Private Key muss 64 Zeichen haben!'); return; }
+  if (!password) { toast('Passwort eingeben!'); return; }
+  const address = privateKeyToAddress(privKey);
+  wallet = { privKey, address, password };
+  localStorage.setItem('nuvex_wallet', JSON.stringify({ address, privKey: btoa(privKey) }));
+  initWallet();
+}
+
+// ── Wallet initialisieren ─────────────────────
+async function initWallet() {
+  try {
+    document.getElementById('address-display').textContent = wallet.address;
+    document.getElementById('receive-address').textContent = wallet.address;
+    document.getElementById('available-balance').textContent = '0';
+    showScreen('screen-wallet');
+    showTab('tab-home');
+    fetchBalance();
+    refreshInterval = setInterval(fetchBalance, 3000);
+    toast('Wallet bereit!');
+  } catch(e) {
+    console.error('initWallet Fehler:', e);
+  }
+}
+
+// ── Balance laden ─────────────────────────────
+async function fetchBalance() {
+  try {
+    const res = await fetch(`${nodeUrl}/balance/${wallet.address}`);
+    const data = await res.json();
+    const nvx = data.balance_nvx || 0;
+    document.getElementById('balance-display').textContent = nvx.toFixed(6);
+    document.getElementById('available-balance').textContent = nvx.toFixed(6);
+
+    // Chain Status
+    const statusRes = await fetch(`${nodeUrl}/status`);
+    const status = await statusRes.json();
+    document.getElementById('status-height').textContent = `Block: ${status.height.toLocaleString()}`;
+    document.getElementById('status-peers').textContent = `Pool: ${status.mempool_size || 0}`;
+
+    // TX Liste
+    fetchTxList();
+  } catch(e) {
+    document.getElementById('status-height').textContent = 'Offline';
+  }
+}
+
+async function fetchTxList() {
+  try {
+    const res = await fetch(`${nodeUrl}/txs`);
+    const data = await res.json();
+    const txs = (data.transactions || []).filter(tx =>
+      tx.from === wallet.address || tx.to === wallet.address
+    ).slice(0, 10);
+
+    const list = document.getElementById('tx-list');
+    if (txs.length === 0) {
+      list.innerHTML = '<div style="color:#6B7A99;font-size:13px;text-align:center;padding:20px;">Keine Transaktionen</div>';
+      return;
+    }
+
+    list.innerHTML = txs.map(tx => {
+      const sent = tx.from === wallet.address;
+      const amt = (tx.amount / 1_000_000).toFixed(4);
+      return `<div class="tx-item">
+        <div class="tx-icon ${sent?'sent':'received'}">${sent?'📤':'📥'}</div>
+        <div class="tx-info">
+          <div class="tx-type">${sent?'Gesendet':'Empfangen'}</div>
+          <div class="tx-hash">${tx.hash.slice(0,20)}...</div>
+        </div>
+        <div class="tx-amount ${sent?'sent':'received'}">
+          ${sent?'-':'+'}${amt} NVX
+          <div class="tx-time">${tx.timestamp.slice(11,19)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── TX senden ─────────────────────────────────
+async function sendTx() {
+  const to = document.getElementById('send-to').value.trim();
+  const amount = parseFloat(document.getElementById('send-amount').value);
+  const fee = parseInt(document.getElementById('send-fee').value) || 1000;
+  const password = document.getElementById('send-password').value;
+
+  if (!to.startsWith('nuvex1')) { toast('Ungueltige Adresse!'); return; }
+  if (!amount || amount <= 0) { toast('Betrag eingeben!'); return; }
+  if (password !== wallet.password) { toast('Falsches Passwort!'); return; }
+
+  const amountUnvx = Math.floor(amount * 1_000_000);
+
+  try {
+    // TX in Mempool einreichen
+    const res = await fetch(`${nodeUrl}/mempool/submit`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        from: wallet.address,
+        to: to,
+        amount: amountUnvx,
+        fee: fee,
+        nonce: Date.now()
+      })
+    });
+    const data = await res.json();
+    if (data.error) { toast('Fehler: ' + data.error); return; }
+    toast('TX eingereicht! Hash: ' + data.hash.slice(0,18) + '...');
+    document.getElementById('send-to').value = '';
+    document.getElementById('send-amount').value = '';
+    showTab('tab-home');
+    setTimeout(fetchBalance, 2000);
+  } catch(e) {
+    toast('Node nicht erreichbar!');
+  }
+}
+
+// ── QR Code ───────────────────────────────────
+function generateQR() {
+  const el = document.getElementById('qr-code');
+  el.innerHTML = '';
+  if (wallet && window.QRCode) {
+    new QRCode(el, {
+      text: wallet.address,
+      width: 180,
+      height: 180,
+      colorDark: '#00D4FF',
+      colorLight: '#060B18',
+    });
+  }
+}
+
+// ── Utilities ─────────────────────────────────
+function copyAddress() {
+  if (!wallet) return;
+  navigator.clipboard.writeText(wallet.address).then(() => toast('Adresse kopiert!'));
+}
+
+function exportKey() {
+  if (!wallet) return;
+  const pw = prompt('Passwort bestaetigen:');
+  if (pw !== wallet.password) { toast('Falsches Passwort!'); return; }
+  alert('PRIVATE KEY (GEHEIM HALTEN!):\n\n' + wallet.privKey + '\n\nSchreibe ihn auf Papier!');
+}
+
+function logout() {
+  if (!confirm('Wallet wirklich loeschen? Stelle sicher dass du den Private Key gesichert hast!')) return;
+  localStorage.removeItem('nuvex_wallet');
+  wallet = null;
+  if (refreshInterval) clearInterval(refreshInterval);
+  showScreen('screen-welcome');
+  toast('Wallet geloescht.');
+}
+
+function saveSettings() {
+  nodeUrl = document.getElementById('node-url').value;
+  localStorage.setItem('nodeUrl', nodeUrl);
+  toast('Gespeichert!');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Auto-Login ────────────────────────────────
+window.onload = async function() {
+  const saved = localStorage.getItem('nuvex_wallet');
+  if (saved) {
+    const data = JSON.parse(saved);
+    const privKey = atob(data.privKey);
+    wallet = {
+      privKey,
+      address: data.address,
+      password: ''
+    };
+    initWallet();
+    toast('Willkommen zurueck!');
+  }
+};
+</script>
+</body>
+</html>

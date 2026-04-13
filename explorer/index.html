@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvex Explorer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0F1E; color: #E8EDF5; font-family: 'Segoe UI', sans-serif; }
+  header { background: #0D1530; border-bottom: 2px solid #00D4FF; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 24px; font-weight: 700; color: #00D4FF; letter-spacing: 2px; }
+  .logo span { color: #7B2FBE; }
+  .live { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6B7A99; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #00ff88; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+  .card { background: #0D1530; border: 1px solid #1A2340; border-radius: 12px; padding: 24px; }
+  .card-label { font-size: 11px; color: #6B7A99; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .card-value { font-size: 28px; font-weight: 700; color: #00D4FF; }
+  .card-sub { font-size: 12px; color: #6B7A99; margin-top: 4px; }
+  .section-title { font-size: 16px; font-weight: 600; color: #E8EDF5; margin-bottom: 16px; border-left: 3px solid #00D4FF; padding-left: 12px; }
+  .blocks { display: flex; flex-direction: column; gap: 8px; }
+  .block-row { background: #0D1530; border: 1px solid #1A2340; border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; transition: border-color 0.2s; }
+  .block-row:hover { border-color: #00D4FF; }
+  .block-num { font-size: 15px; font-weight: 700; color: #00D4FF; }
+  .block-info { font-size: 12px; color: #6B7A99; }
+  .block-burn { font-size: 12px; color: #ff6b6b; }
+  .block-time { font-size: 11px; color: #6B7A99; }
+  .badge { display: inline-block; background: #00ff8822; color: #00ff88; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+  .burn-total { background: #1a0a2e; border: 1px solid #7B2FBE; border-radius: 12px; padding: 20px 24px; margin-bottom: 40px; display: flex; align-items: center; justify-content: space-between; }
+  .burn-label { font-size: 13px; color: #7B2FBE; font-weight: 600; }
+  .burn-value { font-size: 22px; font-weight: 700; color: #ff6b6b; }
+  footer { text-align: center; padding: 40px; color: #6B7A99; font-size: 12px; border-top: 1px solid #1A2340; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">NUV<span>EX</span> EXPLORER</div>
+  <div class="live"><div class="dot"></div> Live — nuvex-1</div>
+</header>
+<div class="container">
+  <div class="stats">
+    <div class="card">
+      <div class="card-label">Latest Block</div>
+      <div class="card-value" id="height">—</div>
+      <div class="card-sub">~400ms block time</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Circulating NVX</div>
+      <div class="card-value" id="circulating">—</div>
+      <div class="card-sub">of 500,000,000 max</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total Burned</div>
+      <div class="card-value" id="burned" style="color:#ff6b6b">—</div>
+      <div class="card-sub">unvx destroyed</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Chain Status</div>
+      <div class="card-value" id="status" style="color:#00ff88">—</div>
+      <div class="card-sub">nuvex-1</div>
+    </div>
+  </div>
+
+  <div class="burn-total">
+    <div>
+      <div class="burn-label">🔥 Deflationary Burn Engine</div>
+      <div style="font-size:12px;color:#6B7A99;margin-top:4px">0.1% of every transaction fee burned forever</div>
+    </div>
+    <div class="burn-value" id="burn-display">0 NVX</div>
+  </div>
+
+  <div class="section-title">Recent Blocks</div>
+  <div class="blocks" id="blocks"></div>
+</div>
+<footer>
+  NUVEX (NVX) — Next Generation Layer-1 Blockchain — nuvex.io<br>
+  <span style="color:#7B2FBE">Anonymous. Decentralized. Forever.</span>
+</footer>
+
+<script>
+const API = 'http://187.124.184.226:1317';
+let lastHeight = 0;
+let blockHistory = [];
+
+async function fetchStatus() {
+  try {
+    const res = await fetch(API + '/status');
+    const data = await res.json();
+
+    document.getElementById('height').textContent = data.height.toLocaleString();
+    document.getElementById('circulating').textContent = (data.circulating / 1_000_000).toLocaleString();
+    document.getElementById('burned').textContent = data.burned.toLocaleString();
+    document.getElementById('status').textContent = data.status.toUpperCase();
+    document.getElementById('burn-display').textContent = (data.burned / 1_000_000).toFixed(4) + ' NVX';
+
+    if (data.height > lastHeight) {
+      for (let h = lastHeight + 1; h <= data.height; h++) {
+        blockHistory.unshift({
+          height: h,
+          txs: 10,
+          burned: 5,
+          time: new Date().toLocaleTimeString(),
+          validator: 'nuvex1genesis...000'
+        });
+      }
+      lastHeight = data.height;
+      if (blockHistory.length > 20) blockHistory = blockHistory.slice(0, 20);
+      renderBlocks();
+    }
+  } catch(e) {
+    document.getElementById('status').textContent = 'CONNECTING...';
+  }
+}
+
+function renderBlocks() {
+  const el = document.getElementById('blocks');
+  el.innerHTML = blockHistory.map(b => `
+    <div class="block-row">
+      <div>
+        <span class="block-num">#${b.height.toLocaleString()}</span>
+        <span class="badge">FINALIZED</span>
+      </div>
+      <div class="block-info">Validator: ${b.validator}</div>
+      <div class="block-info">${b.txs} txs</div>
+      <div class="block-burn">🔥 ${b.burned} unvx burned</div>
+      <div class="block-time">${b.time}</div>
+    </div>
+  `).join('');
+}
+
+fetchStatus();
+setInterval(fetchStatus, 1000);
+</script>
+</body>
+</html>

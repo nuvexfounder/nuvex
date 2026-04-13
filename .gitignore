@@ -1,0 +1,9 @@
+state.json
+chain.db
+chain.db.backup
+state.json.backup
+*.key
+*.pem
+nuvexd
+*.log
+/tmp/
