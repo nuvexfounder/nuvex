@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvex DEX</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--accent:#00D4FF;--purple:#7B2FBE;--dark:#0A0F1E;--mid:#0D1530;--text:#E8EDF5;--muted:#6B7A99;--green:#00ff88;--red:#ff6b6b;}
+body{background:var(--dark);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+nav{background:rgba(10,15,30,0.95);border-bottom:1px solid #1A2340;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:2px;}
+.logo span{color:var(--purple);}
+.nav-links{display:flex;gap:8px;}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:14px;color:var(--muted);text-decoration:none;transition:all 0.2s;}
+.nav-link:hover,.nav-link.active{background:rgba(0,212,255,0.1);color:var(--accent);}
+.live{display:flex;align-items:center;gap:6px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.main{padding:100px 20px 40px;max-width:1200px;margin:0 auto;}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px;}
+.stat-card{background:var(--mid);border:1px solid #1A2340;border-radius:12px;padding:16px 20px;}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.stat-value{font-size:22px;font-weight:700;color:var(--accent);}
+.dex-layout{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start;}
+.swap-card{background:var(--mid);border:1px solid #1A2340;border-radius:20px;padding:24px;}
+.swap-tabs{display:flex;gap:4px;background:#060B18;border-radius:10px;padding:4px;margin-bottom:20px;}
+.swap-tab{flex:1;padding:8px;border-radius:7px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.2s;}
+.swap-tab.active{background:var(--mid);color:var(--text);}
+.token-input{background:#060B18;border:1px solid #1A2340;border-radius:12px;padding:16px;margin-bottom:8px;}
+.token-input-top{display:flex;justify-content:space-between;margin-bottom:8px;}
+.token-label{font-size:12px;color:var(--muted);}
+.token-input-bottom{display:flex;justify-content:space-between;align-items:center;}
+.amount-input{background:transparent;border:none;outline:none;font-size:28px;font-weight:700;color:var(--text);width:60%;}
+.amount-input::placeholder{color:#2A3450;}
+.token-selector{display:flex;align-items:center;gap:8px;background:#0D1530;border:1px solid #1A2340;border-radius:20px;padding:8px 14px;font-weight:600;font-size:15px;}
+.swap-arrow{display:flex;justify-content:center;margin:4px 0;}
+.swap-arrow-btn{background:#060B18;border:1px solid #1A2340;border-radius:10px;padding:8px;cursor:pointer;color:var(--muted);font-size:18px;transition:all 0.2s;}
+.swap-arrow-btn:hover{border-color:var(--accent);color:var(--accent);}
+.quote-box{background:#060B18;border:1px solid #1A2340;border-radius:12px;padding:14px;margin:12px 0;font-size:13px;}
+.quote-row{display:flex;justify-content:space-between;padding:4px 0;color:var(--muted);}
+.quote-row span:last-child{color:var(--text);}
+.quote-row.hi span:last-child{color:var(--accent);}
+.swap-btn{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;transition:all 0.2s;}
+.btn-on{background:linear-gradient(135deg,var(--accent),var(--purple));color:white;}
+.btn-on:hover{opacity:0.9;transform:translateY(-1px);}
+.btn-off{background:#1A2340;color:var(--muted);cursor:not-allowed;}
+.panel-card{background:var(--mid);border:1px solid #1A2340;border-radius:16px;padding:20px;margin-bottom:16px;}
+.panel-title{font-size:14px;font-weight:700;margin-bottom:16px;}
+.pool-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#060B18;border-radius:10px;margin-bottom:8px;cursor:pointer;}
+.pool-row:hover{border:1px solid var(--accent);}
+.pool-name{font-size:14px;font-weight:700;}
+.pool-fee{font-size:11px;color:var(--muted);}
+.pool-tvl{font-size:13px;font-weight:600;color:var(--accent);}
+.pool-vol{font-size:11px;color:var(--muted);}
+.trade-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1A2340;font-size:13px;}
+.trade-row:last-child{border-bottom:none;}
+.buy{color:var(--green);}
+.sell{color:var(--red);}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--mid);border:1px solid var(--accent);padding:14px 20px;border-radius:12px;font-size:13px;opacity:0;transition:opacity 0.3s;z-index:999;}
+.toast.show{opacity:1;}
+@media(max-width:900px){.dex-layout{grid-template-columns:1fr;}.stats-bar{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">NUV<span>EX</span> DEX</div>
+  <div class="nav-links">
+    <a href="/nuvex.html" class="nav-link">Home</a>
+    <a href="/dex.html" class="nav-link active">Trade</a>
+    <a href="/index.html" class="nav-link">Explorer</a>
+    <a href="/wallet.html" class="nav-link">Wallet</a>
+    <a href="/docs.html" class="nav-link">Docs</a>
+  </div>
+  <div class="live"><div class="dot"></div>nuvex-1</div>
+</nav>
+
+<div class="main">
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-label">Total Volume</div><div class="stat-value" id="tvol">$0</div></div>
+    <div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value" id="ttrades">0</div></div>
+    <div class="stat-card"><div class="stat-label">Fees Collected</div><div class="stat-value" id="tfees">$0</div></div>
+    <div class="stat-card"><div class="stat-label">Active Pools</div><div class="stat-value" id="tpools">0</div></div>
+  </div>
+
+  <div class="dex-layout">
+    <div>
+      <div class="swap-card">
+        <div class="swap-tabs">
+          <div class="swap-tab active" onclick="setTab('swap',this)">Swap</div>
+          <div class="swap-tab" onclick="setTab('liq',this)">Liquidity</div>
+        </div>
+
+        <div id="tab-swap">
+          <div class="token-input">
+            <div class="token-input-top"><span class="token-label">You pay</span></div>
+            <div class="token-input-bottom">
+              <input class="amount-input" id="amt-in" type="number" placeholder="0.0" oninput="getQuote()">
+              <div class="token-selector">
+                <span id="tin-icon" style="width:24px;height:24px;border-radius:50%;background:#F7931A;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">U</span>
+                <span id="tin-label">USDT</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="swap-arrow">
+            <button class="swap-arrow-btn" onclick="flip()">⇅</button>
+          </div>
+
+          <div class="token-input">
+            <div class="token-input-top"><span class="token-label">You receive</span></div>
+            <div class="token-input-bottom">
+              <input class="amount-input" id="amt-out" placeholder="0.0" readonly style="color:var(--accent);">
+              <div class="token-selector">
+                <span id="tout-icon" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#00D4FF,#7B2FBE);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">N</span>
+                <span id="tout-label">NVX</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="quote-box" id="qbox" style="display:none;">
+            <div class="quote-row hi"><span>Rate</span><span id="q-rate">—</span></div>
+            <div class="quote-row"><span>Fee (0.3%)</span><span id="q-fee">—</span></div>
+            <div class="quote-row"><span>Price Impact</span><span id="q-impact">—</span></div>
+            <div class="quote-row"><span>Min received</span><span id="q-min">—</span></div>
+          </div>
+
+          <button class="swap-btn btn-off" id="swap-btn" onclick="doSwap()">Enter amount</button>
+        </div>
+
+        <div id="tab-liq" style="display:none;">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Add liquidity to earn 0.3% of all trades.</p>
+          <div class="token-input" style="margin-bottom:10px;">
+            <div class="token-input-bottom">
+              <input class="amount-input" id="liq-a" type="number" placeholder="NVX amount" oninput="calcLiq()">
+              <span style="font-weight:700;color:var(--accent);">NVX</span>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--muted);margin:8px 0;">+</div>
+          <div class="token-input" style="margin-bottom:10px;">
+            <div class="token-input-bottom">
+              <input class="amount-input" id="liq-b" type="number" placeholder="USDT amount">
+              <span style="font-weight:700;color:var(--accent);">USDT</span>
+            </div>
+          </div>
+          <div class="token-input" style="margin-bottom:12px;">
+            <input class="amount-input" id="liq-addr" placeholder="Your nuvex1... address" style="font-size:13px;width:100%;">
+          </div>
+          <div class="quote-box">
+            <div class="quote-row hi"><span>LP Tokens</span><span id="liq-lp">—</span></div>
+            <div class="quote-row"><span>Pool Share</span><span id="liq-share">—</span></div>
+          </div>
+          <button class="swap-btn btn-on" onclick="doAddLiq()">Add Liquidity</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-card">
+        <div class="panel-title">💧 Liquidity Pools</div>
+        <div id="pools-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Loading...</div></div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-title">📊 Recent Trades</div>
+        <div id="trade-hist"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No trades yet</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api';
+let tIn = 'USDT', tOut = 'NVX', pool = 'NVX-USDT', qData = null;
+
+async function loadStats() {
+  try {
+    const d = await (await fetch(API+'/dex/stats')).json();
+    document.getElementById('tvol').textContent = '$'+d.total_volume.toFixed(2);
+    document.getElementById('ttrades').textContent = d.total_trades;
+    document.getElementById('tfees').textContent = '$'+d.total_fees.toFixed(4);
+    document.getElementById('tpools').textContent = d.total_pools;
+  } catch(e) {}
+}
+
+async function loadPools() {
+  try {
+    const d = await (await fetch(API+'/dex/pools')).json();
+    const el = document.getElementById('pools-list');
+    if (!d.pools||!d.pools.length) { el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No pools</div>'; return; }
+    el.innerHTML = d.pools.map(p => {
+      const price = p.reserve_b/p.reserve_a;
+      return `<div class="pool-row">
+        <div><div class="pool-name">${p.token_a}/${p.token_b}</div><div class="pool-fee">0.3% fee • ${p.trades} trades</div></div>
+        <div style="text-align:right"><div class="pool-tvl">TVL $${(p.reserve_b*2).toLocaleString()}</div><div class="pool-vol">Vol $${p.total_volume.toFixed(2)}</div><div class="pool-vol">1 ${p.token_a} = ${price.toFixed(4)} ${p.token_b}</div></div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+async function loadHistory() {
+  try {
+    const d = await (await fetch(API+'/dex/history')).json();
+    const el = document.getElementById('trade-hist');
+    if (!d.swaps||!d.swaps.length) { el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No trades yet</div>'; return; }
+    el.innerHTML = d.swaps.map(s => {
+      const buy = s.token_out==='NVX';
+      return `<div class="trade-row">
+        <span class="${buy?'buy':'sell'}">${buy?'▲ BUY':'▼ SELL'}</span>
+        <span>${s.amount_in.toFixed(2)} ${s.token_in}</span>
+        <span style="color:var(--accent)">${s.amount_out.toFixed(4)} ${s.token_out}</span>
+        <span style="color:var(--muted);font-size:11px;">${s.timestamp.slice(11,19)}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+async function getQuote() {
+  const amt = parseFloat(document.getElementById('amt-in').value);
+  const btn = document.getElementById('swap-btn');
+  const qb = document.getElementById('qbox');
+  if (!amt||amt<=0) { document.getElementById('amt-out').value=''; qb.style.display='none'; btn.className='swap-btn btn-off'; btn.textContent='Enter amount'; return; }
+  try {
+    const q = await (await fetch(API+'/dex/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pool_id:pool,token_in:tIn,amount_in:amt})})).json();
+    qData = q;
+    document.getElementById('amt-out').value = q.amount_out.toFixed(6);
+    document.getElementById('q-rate').textContent = `1 ${tIn} = ${(q.amount_out/q.amount_in).toFixed(4)} ${tOut}`;
+    document.getElementById('q-fee').textContent = `${q.fee.toFixed(4)} ${tIn}`;
+    const imp = q.price_impact;
+    const ic = imp>5?'var(--red)':imp>1?'#FFA040':'var(--green)';
+    document.getElementById('q-impact').innerHTML = `<span style="color:${ic}">${imp.toFixed(2)}%</span>`;
+    document.getElementById('q-min').textContent = `${(q.amount_out*0.995).toFixed(4)} ${tOut}`;
+    qb.style.display='block';
+    btn.className='swap-btn btn-on';
+    btn.textContent=`Swap ${tIn} → ${tOut}`;
+  } catch(e) { btn.textContent='Error'; }
+}
+
+async function doSwap() {
+  const amt = parseFloat(document.getElementById('amt-in').value);
+  if (!amt||!qData) return;
+  const trader = prompt('Your nuvex1... address:');
+  if (!trader||!trader.startsWith('nuvex1')) { toast('Invalid address','error'); return; }
+  try {
+    const d = await (await fetch(API+'/dex/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pool_id:pool,token_in:tIn,amount_in:amt,min_amount_out:qData.amount_out*0.995,trader})})).json();
+    if (d.success) {
+      toast(`✅ ${d.amount_in} ${d.token_in} → ${d.amount_out.toFixed(4)} ${d.token_out}`,'success');
+      document.getElementById('amt-in').value='';
+      document.getElementById('amt-out').value='';
+      document.getElementById('qbox').style.display='none';
+      loadAll();
+    } else { toast('❌ '+(d.error||'Failed'),'error'); }
+  } catch(e) { toast('❌ Error','error'); }
+}
+
+async function doAddLiq() {
+  const a = parseFloat(document.getElementById('liq-a').value);
+  const b = parseFloat(document.getElementById('liq-b').value);
+  const addr = document.getElementById('liq-addr').value;
+  if (!a||!b||!addr) { toast('Fill all fields','error'); return; }
+  try {
+    const d = await (await fetch(API+'/dex/liquidity/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pool_id:pool,amount_a:a,amount_b:b,provider:addr})})).json();
+    if (d.success) { toast(`✅ LP Tokens: ${d.lp_tokens_received.toFixed(4)}`,'success'); loadAll(); }
+    else { toast('❌ '+d.error,'error'); }
+  } catch(e) { toast('❌ Error','error'); }
+}
+
+function flip() {
+  [tIn,tOut]=[tOut,tIn];
+  document.getElementById('tin-label').textContent=tIn;
+  document.getElementById('tout-label').textContent=tOut;
+  const ii=document.getElementById('tin-icon');
+  const oi=document.getElementById('tout-icon');
+  if(tIn==='NVX'){ii.style.background='linear-gradient(135deg,#00D4FF,#7B2FBE)';ii.textContent='N';oi.style.background='#F7931A';oi.textContent='U';}
+  else{ii.style.background='#F7931A';ii.textContent='U';oi.style.background='linear-gradient(135deg,#00D4FF,#7B2FBE)';oi.textContent='N';}
+  document.getElementById('amt-in').value='';
+  document.getElementById('amt-out').value='';
+  document.getElementById('qbox').style.display='none';
+}
+
+function calcLiq() {
+  const a = parseFloat(document.getElementById('liq-a').value)||0;
+  document.getElementById('liq-b').value=(a*0.5).toFixed(2);
+  document.getElementById('liq-lp').textContent=Math.sqrt(a*(a*0.5)).toFixed(4);
+  document.getElementById('liq-share').textContent=((a/1000000)*100).toFixed(4)+'%';
+}
+
+function setTab(t,el) {
+  document.querySelectorAll('.swap-tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-swap').style.display=t==='swap'?'block':'none';
+  document.getElementById('tab-liq').style.display=t==='liq'?'block':'none';
+}
+
+function toast(msg,type) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast show';
+  if(type==='error') el.style.borderColor='var(--red)';
+  else el.style.borderColor='var(--green)';
+  setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+function loadAll() { loadStats(); loadPools(); loadHistory(); }
+loadAll();
+setInterval(loadAll,5000);
+</script>
+</body>
+</html>
