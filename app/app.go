@@ -18,8 +18,9 @@ type NuvexApp struct {
 	P2P        *keeper.P2PNode
 	BFT        *keeper.BFTConsensus
 	Engine     *keeper.ConsensusEngine
-	Height     int64
 	EVM        *keeper.EVMKeeper
+	DEX        *keeper.DEXKeeper
+	Height     int64
 }
 
 func NewNuvexApp() *NuvexApp {
@@ -35,6 +36,7 @@ func NewNuvexApp() *NuvexApp {
 			{Address: "nuvex1f81358e9a3840c5ca4647f2bc90b0e8b7b7a70", Amount: 100_000_000_000_000, PublicKey: ""},
 			{Address: "nuvex1c22e41daadec8a5856631fbdd11a40b69b0248", Amount: 100_000_000_000_000, PublicKey: ""},
 			{Address: "nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9", Amount:  25_000_000_000_000, PublicKey: ""},
+			{Address: "nuvex1af7c2f39fd1751be635ff6141a4c4aea8cda91", Amount:  25_000_000_000_000, PublicKey: ""},
 		})
 	}
 
@@ -51,23 +53,18 @@ func NewNuvexApp() *NuvexApp {
 	burns  := keeper.NewBurnKeeper()
 	engine := keeper.NewConsensusEngine(validators)
 	p2p    := keeper.NewP2PNode(nodeID, bc, mempool)
-
-	// BFT Konsens Engine
-	bft := keeper.NewBFTConsensus(
-		validators, bc, mempool, p2p,
-		"nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9",
-	)
+	bft    := keeper.NewBFTConsensus(validators, bc, mempool, p2p,
+		"nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9")
+	evm, _ := keeper.NewEVMKeeper()
+	dex    := keeper.NewDEXKeeper()
 
 	if err := bc.ValidateChain(); err != nil {
 		fmt.Printf("[Nuvex] Chain Fehler: %v\n", err)
 	}
 
-	fmt.Printf("[Nuvex] ✅ Chain Height:  %d\n", bc.Height())
-	fmt.Printf("[Nuvex] ✅ BFT Quorum:   %d Validator(en)\n", 1)
-	fmt.Printf("[Nuvex] ✅ Founders:      %d NVX\n\n",
-		state.GetBalance("nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9")/1_000_000)
-
-	evm, _ := keeper.NewEVMKeeper()
+	fmt.Printf("[Nuvex] Chain Height:  %d\n", bc.Height())
+	fmt.Printf("[Nuvex] DEX bereit\n")
+	fmt.Printf("[Nuvex] EVM Chain ID: 1317\n\n")
 
 	return &NuvexApp{
 		ChainID:    types.ChainID,
@@ -79,8 +76,9 @@ func NewNuvexApp() *NuvexApp {
 		P2P:        p2p,
 		BFT:        bft,
 		Engine:     engine,
-		Height:     bc.Height(),
 		EVM:        evm,
+		DEX:        dex,
+		Height:     bc.Height(),
 	}
 }
 

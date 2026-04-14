@@ -45,6 +45,13 @@ func (s *APIServer) Start() {
 	mux.HandleFunc("/evm/deploy", s.handleEVMDeploy)
 	mux.HandleFunc("/evm/call", s.handleEVMCall)
 	mux.HandleFunc("/evm/stats", s.handleEVMStats)
+	mux.HandleFunc("/dex/stats", s.handleDEXStats)
+	mux.HandleFunc("/dex/pools", s.handleDEXPools)
+	mux.HandleFunc("/dex/create", s.handleDEXCreatePool)
+	mux.HandleFunc("/dex/swap", s.handleDEXSwap)
+	mux.HandleFunc("/dex/quote", s.handleDEXQuote)
+	mux.HandleFunc("/dex/liquidity/add", s.handleDEXAddLiquidity)
+	mux.HandleFunc("/dex/history", s.handleDEXHistory)
 	
 	fmt.Printf("[Nuvex API] Running on port %s\n", s.port)
 	http.ListenAndServe(":"+s.port, mux)
@@ -357,4 +364,124 @@ func (s *APIServer) handleEVMCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(result)
+}
+
+func (s *APIServer) handleDEXStats(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	json.NewEncoder(w).Encode(s.app.DEX.Stats())
+}
+
+func (s *APIServer) handleDEXPools(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	pools := s.app.DEX.GetAllPools()
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"pools": pools,
+		"total": len(pools),
+	})
+}
+
+func (s *APIServer) handleDEXCreatePool(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		TokenA   string  `json:"token_a"`
+		TokenB   string  `json:"token_b"`
+		AmountA  float64 `json:"amount_a"`
+		AmountB  float64 `json:"amount_b"`
+		Creator  string  `json:"creator"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	pool, err := s.app.DEX.CreatePool(req.TokenA, req.TokenB, req.AmountA, req.AmountB, req.Creator)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(pool)
+}
+
+func (s *APIServer) handleDEXSwap(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		PoolID       string  `json:"pool_id"`
+		TokenIn      string  `json:"token_in"`
+		AmountIn     float64 `json:"amount_in"`
+		MinAmountOut float64 `json:"min_amount_out"`
+		Trader       string  `json:"trader"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	result, err := s.app.DEX.Swap(req.PoolID, req.TokenIn, req.AmountIn, req.MinAmountOut, req.Trader)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
+func (s *APIServer) handleDEXQuote(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		PoolID   string  `json:"pool_id"`
+		TokenIn  string  `json:"token_in"`
+		AmountIn float64 `json:"amount_in"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	quote, err := s.app.DEX.GetQuote(req.PoolID, req.TokenIn, req.AmountIn)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(quote)
+}
+
+func (s *APIServer) handleDEXAddLiquidity(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		PoolID   string  `json:"pool_id"`
+		AmountA  float64 `json:"amount_a"`
+		AmountB  float64 `json:"amount_b"`
+		Provider string  `json:"provider"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	result, err := s.app.DEX.AddLiquidity(req.PoolID, req.AmountA, req.AmountB, req.Provider)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
+func (s *APIServer) handleDEXHistory(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	history := s.app.DEX.GetSwapHistory(20)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"swaps": history,
+		"total": len(history),
+	})
 }
