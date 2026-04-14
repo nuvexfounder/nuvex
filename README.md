@@ -72,3 +72,14 @@ MIT — Open Source forever.
 
 ---
 *Nuvex Foundation — Anonymous — https://nuvex-chain.io*
+
+## ERC-20 Token (Ethereum)
+
+NVX is also available as an ERC-20 token on Ethereum Mainnet:
+
+| | |
+|---|---|
+| Contract | `0xD25A1Bb602A1936d1F901458C797fDc7188a0164` |
+| Network | Ethereum Mainnet |
+| Etherscan | https://etherscan.io/token/0xD25A1Bb602A1936d1F901458C797fDc7188a0164 |
+| Uniswap | https://app.uniswap.org/swap?outputCurrency=0xD25A1Bb602A1936d1F901458C797fDc7188a0164 |
