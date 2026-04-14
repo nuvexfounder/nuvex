@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"github.com/holiman/uint256"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -108,10 +109,10 @@ func (ek *EVMKeeper) DeployContract(
 	// EVM Konfiguration
 	vmConfig := vm.Config{}
 	blockCtx := vm.BlockContext{
-		CanTransfer: func(db vm.StateDB, addr common.Address, amount *big.Int) bool {
+		CanTransfer: func(db vm.StateDB, addr common.Address, amount *uint256.Int) bool {
 			return db.GetBalance(addr).Cmp(amount) >= 0
 		},
-		Transfer: func(db vm.StateDB, sender, recipient common.Address, amount *big.Int) {
+		Transfer: func(db vm.StateDB, sender, recipient common.Address, amount *uint256.Int) {
 			db.SubBalance(sender, amount)
 			db.AddBalance(recipient, amount)
 		},
@@ -141,7 +142,7 @@ func (ek *EVMKeeper) DeployContract(
 		vm.AccountRef(deployer),
 		bytecode,
 		gasLimit,
-		big.NewInt(0),
+		uint256.NewInt(0),
 	)
 
 	result := &EVMResult{
@@ -205,10 +206,10 @@ func (ek *EVMKeeper) CallContract(
 
 	vmConfig := vm.Config{}
 	blockCtx := vm.BlockContext{
-		CanTransfer: func(db vm.StateDB, addr common.Address, amount *big.Int) bool {
+		CanTransfer: func(db vm.StateDB, addr common.Address, amount *uint256.Int) bool {
 			return db.GetBalance(addr).Cmp(amount) >= 0
 		},
-		Transfer: func(db vm.StateDB, sender, recipient common.Address, amount *big.Int) {
+		Transfer: func(db vm.StateDB, sender, recipient common.Address, amount *uint256.Int) {
 			db.SubBalance(sender, amount)
 			db.AddBalance(recipient, amount)
 		},
@@ -237,7 +238,7 @@ func (ek *EVMKeeper) CallContract(
 		contractAddr,
 		data,
 		gasLimit,
-		big.NewInt(value),
+		uint256.NewInt(uint64(value)),
 	)
 
 	result := &EVMResult{
