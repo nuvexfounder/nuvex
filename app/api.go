@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/nuvex-foundation/nuvex/x/nvx/keeper"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -57,6 +58,11 @@ func (s *APIServer) Start() {
 	mux.HandleFunc("/staking/unstake", s.handleUnstake)
 	mux.HandleFunc("/staking/positions", s.handleStakingPositions)
 	mux.HandleFunc("/staking/pending", s.handleStakingPending)
+	mux.HandleFunc("/governance/stats", s.handleGovStats)
+	mux.HandleFunc("/governance/proposals", s.handleGovProposals)
+	mux.HandleFunc("/governance/proposal", s.handleGovProposal)
+	mux.HandleFunc("/governance/create", s.handleGovCreate)
+	mux.HandleFunc("/governance/vote", s.handleGovVote)
 	
 	fmt.Printf("[Nuvex API] Running on port %s\n", s.port)
 	http.ListenAndServe(":"+s.port, mux)
@@ -567,4 +573,82 @@ func (s *APIServer) handleStakingPending(w http.ResponseWriter, r *http.Request)
 		"position_id":     positionID,
 		"pending_rewards": pending,
 	})
+}
+
+func (s *APIServer) handleGovStats(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	json.NewEncoder(w).Encode(s.app.Governance.GetStats())
+}
+
+func (s *APIServer) handleGovProposals(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	proposals := s.app.Governance.GetAllProposals()
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"proposals": proposals,
+		"total":     len(proposals),
+	})
+}
+
+func (s *APIServer) handleGovProposal(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	idStr := r.URL.Query().Get("id")
+	var id uint64
+	fmt.Sscanf(idStr, "%d", &id)
+	proposal, err := s.app.Governance.GetProposal(id)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(proposal)
+}
+
+func (s *APIServer) handleGovCreate(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		Proposer    string `json:"proposer"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
+		Deposit     uint64 `json:"deposit"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	proposal, err := s.app.Governance.CreateProposal(
+		req.Proposer, req.Title, req.Description,
+		keeper.ProposalType(req.Type), req.Deposit,
+	)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(proposal)
+}
+
+func (s *APIServer) handleGovVote(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		ProposalID uint64 `json:"proposal_id"`
+		Voter      string `json:"voter"`
+		Option     string `json:"option"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	vote, err := s.app.Governance.Vote(req.ProposalID, req.Voter, keeper.VoteOption(req.Option))
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(vote)
 }

@@ -21,6 +21,7 @@ type NuvexApp struct {
 	EVM        *keeper.EVMKeeper
 	DEX        *keeper.DEXKeeper
 	Staking    *keeper.StakingKeeper
+	Governance *keeper.GovernanceKeeper
 	Height     int64
 }
 
@@ -58,7 +59,8 @@ func NewNuvexApp() *NuvexApp {
 		"nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9")
 	evm, _ := keeper.NewEVMKeeper()
 	dex     := keeper.NewDEXKeeper()
-	staking := keeper.NewStakingKeeper(state)
+	staking    := keeper.NewStakingKeeper(state)
+	governance := keeper.NewGovernanceKeeper(state)
 
 	if err := bc.ValidateChain(); err != nil {
 		fmt.Printf("[Nuvex] Chain Fehler: %v\n", err)
@@ -81,6 +83,7 @@ func NewNuvexApp() *NuvexApp {
 		EVM:        evm,
 		DEX:        dex,
 		Staking:    staking,
+		Governance: governance,
 		Height:     bc.Height(),
 	}
 }
