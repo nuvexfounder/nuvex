@@ -63,6 +63,10 @@ func (s *APIServer) Start() {
 	mux.HandleFunc("/governance/proposal", s.handleGovProposal)
 	mux.HandleFunc("/governance/create", s.handleGovCreate)
 	mux.HandleFunc("/governance/vote", s.handleGovVote)
+	mux.HandleFunc("/evm/stats/v2", s.handleEVMStatsV2)
+	mux.HandleFunc("/evm/estimate", s.handleEVMEstimateGas)
+	mux.HandleFunc("/evm/contract/info", s.handleEVMContractInfo)
+	mux.HandleFunc("/evm/nvx20/abi", s.handleNVX20ABI)
 	
 	fmt.Printf("[Nuvex API] Running on port %s\n", s.port)
 	http.ListenAndServe(":"+s.port, mux)
@@ -651,4 +655,58 @@ func (s *APIServer) handleGovVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(vote)
+}
+
+func (s *APIServer) handleEVMStatsV2(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	json.NewEncoder(w).Encode(s.app.EVM.StatsV2())
+}
+
+func (s *APIServer) handleEVMEstimateGas(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		Caller   string `json:"caller"`
+		Contract string `json:"contract"`
+		Calldata string `json:"calldata"`
+		Value    int64  `json:"value"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	estimate, err := s.app.EVM.EstimateGas(req.Caller, req.Contract, req.Calldata, req.Value)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(estimate)
+}
+
+func (s *APIServer) handleEVMContractInfo(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	address := r.URL.Query().Get("address")
+	if address == "" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "address required"})
+		return
+	}
+	info, err := s.app.EVM.GetContractInfo(address)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(info)
+}
+
+func (s *APIServer) handleNVX20ABI(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"standard": "NVX-20",
+		"compatible_with": "ERC-20",
+		"abi": keeper.NVX20TokenABI,
+		"description": "Official Nuvex token standard — deploy ERC-20 compatible tokens on Nuvex",
+	})
 }
