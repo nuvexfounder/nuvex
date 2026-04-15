@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvex Governance</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--accent:#00D4FF;--purple:#7B2FBE;--dark:#0A0F1E;--mid:#0D1530;--text:#E8EDF5;--muted:#6B7A99;--green:#00ff88;--red:#ff6b6b;}
+body{background:var(--dark);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+nav{background:rgba(10,15,30,0.95);border-bottom:1px solid #1A2340;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:100;}
+.logo{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:2px;}
+.logo span{color:var(--purple);}
+.nav-links{display:flex;gap:8px;}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:14px;color:var(--muted);text-decoration:none;}
+.nav-link.active,.nav-link:hover{background:rgba(0,212,255,0.1);color:var(--accent);}
+.main{padding:100px 20px 40px;max-width:1100px;margin:0 auto;}
+.page-title{font-size:36px;font-weight:700;margin-bottom:8px;}
+.page-sub{color:var(--muted);margin-bottom:32px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px;}
+.stat-card{background:var(--mid);border:1px solid #1A2340;border-radius:12px;padding:20px;}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.stat-value{font-size:24px;font-weight:700;color:var(--accent);}
+.layout{display:grid;grid-template-columns:1fr 380px;gap:20px;}
+.card{background:var(--mid);border:1px solid #1A2340;border-radius:16px;padding:24px;margin-bottom:16px;}
+.card-title{font-size:16px;font-weight:700;margin-bottom:20px;}
+.proposal-card{background:#060B18;border:1px solid #1A2340;border-radius:12px;padding:20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;}
+.proposal-card:hover{border-color:var(--accent);}
+.proposal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.proposal-title{font-size:15px;font-weight:700;}
+.proposal-type{font-size:11px;color:var(--muted);margin-top:4px;}
+.status-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.status-voting{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--accent);}
+.status-passed{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
+.status-rejected{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);color:var(--red);}
+.status-expired{background:rgba(107,122,153,0.1);border:1px solid rgba(107,122,153,0.3);color:var(--muted);}
+.vote-bars{margin:12px 0;}
+.vote-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;}
+.vote-bar-label{width:60px;color:var(--muted);}
+.vote-bar-track{flex:1;height:6px;background:#1A2340;border-radius:3px;}
+.vote-bar-fill{height:100%;border-radius:3px;transition:width 0.3s;}
+.bar-yes{background:var(--green);}
+.bar-no{background:var(--red);}
+.bar-abstain{background:var(--muted);}
+.vote-bar-pct{width:40px;text-align:right;color:var(--muted);}
+.proposal-footer{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:12px;}
+.inp{width:100%;background:#060B18;border:1px solid #1A2340;border-radius:8px;padding:12px 16px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;}
+.inp:focus{border-color:var(--accent);}
+textarea.inp{height:80px;resize:vertical;}
+select.inp{cursor:pointer;}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--purple));color:white;}
+.btn-yes{background:rgba(0,255,136,0.15);border:1px solid var(--green);color:var(--green);}
+.btn-no{background:rgba(255,107,107,0.15);border:1px solid var(--red);color:var(--red);}
+.btn-abstain{background:rgba(107,122,153,0.15);border:1px solid var(--muted);color:var(--muted);}
+.info-box{background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:14px;margin-bottom:12px;font-size:13px;color:var(--muted);line-height:1.7;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--mid);border:1px solid var(--green);padding:14px 20px;border-radius:12px;font-size:13px;opacity:0;transition:opacity 0.3s;z-index:999;}
+.toast.show{opacity:1;}
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">NUV<span>EX</span></div>
+  <div class="nav-links">
+    <a href="/nuvex.html" class="nav-link">Home</a>
+    <a href="/dex.html" class="nav-link">Trade</a>
+    <a href="/staking.html" class="nav-link">Staking</a>
+    <a href="/governance.html" class="nav-link active">Governance</a>
+    <a href="/index.html" class="nav-link">Explorer</a>
+    <a href="/wallet.html" class="nav-link">Wallet</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-title">Nuvex Governance</div>
+  <div class="page-sub">Vote on proposals that shape the future of Nuvex</div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total Proposals</div><div class="stat-value" id="total-props">—</div></div>
+    <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" id="active-props">—</div></div>
+    <div class="stat-card"><div class="stat-label">Passed</div><div class="stat-value" id="passed-props">—</div></div>
+    <div class="stat-card"><div class="stat-label">Quorum</div><div class="stat-value">33%</div></div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="card-title">Active Proposals</div>
+        <div id="proposals-list">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Vote</div>
+        <div class="info-box">
+          Your voting power = your NVX balance<br>
+          Voting period: 7 days<br>
+          Quorum: 33% | Pass: 50%+
+        </div>
+        <input class="inp" id="voter-addr" placeholder="Your nuvex1... address">
+        <input class="inp" id="proposal-id" type="number" placeholder="Proposal ID">
+        <button class="btn btn-yes" onclick="doVote('yes')">Vote YES</button>
+        <button class="btn btn-no" onclick="doVote('no')">Vote NO</button>
+        <button class="btn btn-abstain" onclick="doVote('abstain')">Abstain</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Create Proposal</div>
+        <div class="info-box">Minimum deposit: 1,000 NVX</div>
+        <input class="inp" id="prop-proposer" placeholder="Your nuvex1... address">
+        <input class="inp" id="prop-title" placeholder="Proposal title">
+        <textarea class="inp" id="prop-desc" placeholder="Description (minimum 100 chars)"></textarea>
+        <select class="inp" id="prop-type">
+          <option value="parameter_change">Parameter Change</option>
+          <option value="network_upgrade">Network Upgrade</option>
+          <option value="community_fund">Community Fund</option>
+          <option value="text">Text Proposal</option>
+        </select>
+        <input class="inp" id="prop-deposit" type="number" placeholder="Deposit (NVX)" value="1000">
+        <button class="btn btn-primary" onclick="createProposal()">Submit Proposal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='/api';
+
+async function loadStats(){
+  try{
+    const d=await(await fetch(API+'/governance/stats')).json();
+    document.getElementById('total-props').textContent=d.total_proposals;
+    document.getElementById('active-props').textContent=d.active_proposals;
+    document.getElementById('passed-props').textContent=d.passed_proposals;
+  }catch(e){}
+}
+
+async function loadProposals(){
+  try{
+    const d=await(await fetch(API+'/governance/proposals')).json();
+    const el=document.getElementById('proposals-list');
+    if(!d.proposals||!d.proposals.length){
+      el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">No proposals yet</div>';
+      return;
+    }
+    const sorted=[...d.proposals].sort((a,b)=>b.id-a.id);
+    el.innerHTML=sorted.map(p=>{
+      const total=p.total_power||1;
+      const yesPct=((p.yes_power/total)*100).toFixed(1);
+      const noPct=((p.no_power/total)*100).toFixed(1);
+      const abstainPct=((p.abstain_power/total)*100).toFixed(1);
+      const statusClass='status-'+p.status;
+      const endDate=new Date(p.end_time).toLocaleDateString();
+      const daysLeft=Math.max(0,Math.ceil((new Date(p.end_time)-new Date())/86400000));
+      return `<div class="proposal-card">
+        <div class="proposal-header">
+          <div>
+            <div class="proposal-title">#${p.id} — ${p.title}</div>
+            <div class="proposal-type">${p.type} • ${p.votes.length} votes</div>
+          </div>
+          <div class="status-badge ${statusClass}">${p.status.toUpperCase()}</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">${p.description.slice(0,120)}...</div>
+        <div class="vote-bars">
+          <div class="vote-bar-row">
+            <span class="vote-bar-label" style="color:var(--green)">Yes</span>
+            <div class="vote-bar-track"><div class="vote-bar-fill bar-yes" style="width:${yesPct}%"></div></div>
+            <span class="vote-bar-pct">${yesPct}%</span>
+          </div>
+          <div class="vote-bar-row">
+            <span class="vote-bar-label" style="color:var(--red)">No</span>
+            <div class="vote-bar-track"><div class="vote-bar-fill bar-no" style="width:${noPct}%"></div></div>
+            <span class="vote-bar-pct">${noPct}%</span>
+          </div>
+          <div class="vote-bar-row">
+            <span class="vote-bar-label">Abstain</span>
+            <div class="vote-bar-track"><div class="vote-bar-fill bar-abstain" style="width:${abstainPct}%"></div></div>
+            <span class="vote-bar-pct">${abstainPct}%</span>
+          </div>
+        </div>
+        <div class="proposal-footer">
+          <span>Ends: ${endDate}</span>
+          <span>${p.status==='voting'?daysLeft+' days left':'Closed'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function doVote(option){
+  const voter=document.getElementById('voter-addr').value;
+  const id=parseInt(document.getElementById('proposal-id').value);
+  if(!voter||!id){toast('Fill voter address and proposal ID');return;}
+  try{
+    const d=await(await fetch(API+'/governance/vote',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({proposal_id:id,voter,option})
+    })).json();
+    if(d.error){toast('Error: '+d.error);return;}
+    toast('Vote submitted! Option: '+option.toUpperCase());
+    loadProposals();loadStats();
+  }catch(e){toast('Error');}
+}
+
+async function createProposal(){
+  const proposer=document.getElementById('prop-proposer').value;
+  const title=document.getElementById('prop-title').value;
+  const description=document.getElementById('prop-desc').value;
+  const type=document.getElementById('prop-type').value;
+  const deposit=parseFloat(document.getElementById('prop-deposit').value)||1000;
+  if(!proposer||!title||!description){toast('Fill all fields');return;}
+  try{
+    const d=await(await fetch(API+'/governance/create',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({proposer,title,description,type,deposit:Math.floor(deposit*1e6)})
+    })).json();
+    if(d.error){toast('Error: '+d.error);return;}
+    toast('Proposal #'+d.id+' created!');
+    loadProposals();loadStats();
+  }catch(e){toast('Error');}
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+loadStats();loadProposals();
+setInterval(()=>{loadStats();loadProposals();},15000);
+</script>
+</body>
+</html>
