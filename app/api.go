@@ -52,6 +52,11 @@ func (s *APIServer) Start() {
 	mux.HandleFunc("/dex/quote", s.handleDEXQuote)
 	mux.HandleFunc("/dex/liquidity/add", s.handleDEXAddLiquidity)
 	mux.HandleFunc("/dex/history", s.handleDEXHistory)
+	mux.HandleFunc("/staking/stats", s.handleStakingStats)
+	mux.HandleFunc("/staking/stake", s.handleStake)
+	mux.HandleFunc("/staking/unstake", s.handleUnstake)
+	mux.HandleFunc("/staking/positions", s.handleStakingPositions)
+	mux.HandleFunc("/staking/pending", s.handleStakingPending)
 	
 	fmt.Printf("[Nuvex API] Running on port %s\n", s.port)
 	http.ListenAndServe(":"+s.port, mux)
@@ -483,5 +488,83 @@ func (s *APIServer) handleDEXHistory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"swaps": history,
 		"total": len(history),
+	})
+}
+
+func (s *APIServer) handleStakingStats(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	json.NewEncoder(w).Encode(s.app.Staking.GetStats())
+}
+
+func (s *APIServer) handleStake(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		Owner   string `json:"owner"`
+		Amount  uint64 `json:"amount"`
+		IsGreen bool   `json:"is_green"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	position, err := s.app.Staking.Stake(req.Owner, req.Amount, req.IsGreen)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(position)
+}
+
+func (s *APIServer) handleUnstake(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	if r.Method != "POST" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "POST required"})
+		return
+	}
+	var req struct {
+		Owner      string `json:"owner"`
+		PositionID string `json:"position_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	position, err := s.app.Staking.Unstake(req.Owner, req.PositionID)
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	json.NewEncoder(w).Encode(position)
+}
+
+func (s *APIServer) handleStakingPositions(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	owner := r.URL.Query().Get("owner")
+	if owner == "" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "owner required"})
+		return
+	}
+	positions := s.app.Staking.GetPositionsByOwner(owner)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"positions": positions,
+		"total":     len(positions),
+	})
+}
+
+func (s *APIServer) handleStakingPending(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	positionID := r.URL.Query().Get("id")
+	if positionID == "" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "id required"})
+		return
+	}
+	pending := s.app.Staking.PendingRewards(positionID)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"position_id":     positionID,
+		"pending_rewards": pending,
 	})
 }

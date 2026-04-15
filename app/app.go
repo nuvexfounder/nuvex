@@ -20,6 +20,7 @@ type NuvexApp struct {
 	Engine     *keeper.ConsensusEngine
 	EVM        *keeper.EVMKeeper
 	DEX        *keeper.DEXKeeper
+	Staking    *keeper.StakingKeeper
 	Height     int64
 }
 
@@ -56,7 +57,8 @@ func NewNuvexApp() *NuvexApp {
 	bft    := keeper.NewBFTConsensus(validators, bc, mempool, p2p,
 		"nuvex19d85718c8da8f4213e1a2a41fe894ba928b9c9")
 	evm, _ := keeper.NewEVMKeeper()
-	dex    := keeper.NewDEXKeeper()
+	dex     := keeper.NewDEXKeeper()
+	staking := keeper.NewStakingKeeper(state)
 
 	if err := bc.ValidateChain(); err != nil {
 		fmt.Printf("[Nuvex] Chain Fehler: %v\n", err)
@@ -78,6 +80,7 @@ func NewNuvexApp() *NuvexApp {
 		Engine:     engine,
 		EVM:        evm,
 		DEX:        dex,
+		Staking:    staking,
 		Height:     bc.Height(),
 	}
 }
