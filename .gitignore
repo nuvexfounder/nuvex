@@ -7,3 +7,6 @@ state.json.backup
 nuvexd
 *.log
 /tmp/
+backups/
+*.db
+*.db.backup
