@@ -67,6 +67,9 @@ func (s *APIServer) Start() {
 	mux.HandleFunc("/evm/estimate", s.handleEVMEstimateGas)
 	mux.HandleFunc("/evm/contract/info", s.handleEVMContractInfo)
 	mux.HandleFunc("/evm/nvx20/abi", s.handleNVX20ABI)
+	mux.HandleFunc("/storage/stats", s.handleLevelDBStats)
+	mux.HandleFunc("/tx/address", s.handleTxByAddress)
+	mux.HandleFunc("/tx/hash", s.handleTxByHash)
 	
 	fmt.Printf("[Nuvex API] Running on port %s\n", s.port)
 	http.ListenAndServe(":"+s.port, mux)
@@ -709,4 +712,51 @@ func (s *APIServer) handleNVX20ABI(w http.ResponseWriter, r *http.Request) {
 		"abi": keeper.NVX20TokenABI,
 		"description": "Official Nuvex token standard — deploy ERC-20 compatible tokens on Nuvex",
 	})
+}
+
+func (s *APIServer) handleLevelDBStats(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"storage": "LevelDB",
+		"status": "active",
+		"description": "High-performance key-value storage — same as Bitcoin and Ethereum",
+	})
+}
+
+func (s *APIServer) handleTxByAddress(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	address := r.URL.Query().Get("address")
+	if address == "" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "address required"})
+		return
+	}
+	txs := s.app.State.GetTransactions(50)
+	filtered := make([]interface{}, 0)
+	for _, tx := range txs {
+		if tx.From == address || tx.To == address {
+			filtered = append(filtered, tx)
+		}
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"address": address,
+		"transactions": filtered,
+		"total": len(filtered),
+	})
+}
+
+func (s *APIServer) handleTxByHash(w http.ResponseWriter, r *http.Request) {
+	cors(w)
+	hash := r.URL.Query().Get("hash")
+	if hash == "" {
+		json.NewEncoder(w).Encode(map[string]string{"error": "hash required"})
+		return
+	}
+	txs := s.app.State.GetTransactions(1000)
+	for _, tx := range txs {
+		if tx.Hash == hash {
+			json.NewEncoder(w).Encode(tx)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(map[string]string{"error": "TX nicht gefunden"})
 }
